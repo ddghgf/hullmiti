@@ -1,7 +1,8 @@
 # POPE Evaluation Config (LLaVA-1.5)
 # Model config
-model_name: /path/to/llava-v1.5-7b
+model_name: /mnt/data2/zhangwei/shimenghui/HulluEdit/llava-v1.5-7b
 precision: bf16
+use_hulluedit: true
 
 
 # ECSE subspace parameters
@@ -24,13 +25,14 @@ norm_beta: 0.74
 blend_tau: 0.76
 
 # Generation parameters
-max_new_tokens: 64
+max_new_tokens: 4
 top_p: 1
-temperature: 0.05
+temperature: 0.0
+num_beams: 1
 
 # Dataset config
-pope_root: /path/to/DATA/POPE
-coco_images: /path/to/DATA/val2014
+pope_root: /mnt/data2/zhangwei/shimenghui/HulluEdit/DATA/POPE
+coco_images: /mnt/data2/zhangwei/shimenghui/HulluEdit/DATA/val2014
 
 # Output config
-output_dir: /path/to/outputs/pope_llava
+output_dir: /mnt/data2/zhangwei/shimenghui/HulluEdit/outputs/pope_llava

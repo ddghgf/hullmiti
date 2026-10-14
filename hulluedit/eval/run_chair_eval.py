@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import eval_chair module
-from hulluedit.eval.eval_chair import compute_chair_metrics
+from hulluedit.eval.eval_chair import compute_chair_metrics, scale_chair_metrics
 
 
 def main():
@@ -31,7 +31,7 @@ def main():
                        default=str(project_root / "outputs" / "chair" / "chair.pkl"),
                        help="CHAIR evaluator cache path")
     parser.add_argument("--chair-code-dir", type=str, default=os.environ.get("CHAIR_CODE_DIR", ""),
-                       help="Directory containing DeCo/Nullu chair.py; defaults to CHAIR_CODE_DIR or PYTHONPATH")
+                       help="Optional directory containing an external chair.py; defaults to the vendored evaluator")
     parser.add_argument("--verbose", action="store_true",
                        help="Print detailed results")
     
@@ -65,7 +65,7 @@ def main():
     halc_result = {}
     for item in halc_caption_result:
         img_id = item["image_id"]
-        metrics = item.get("metrics", {})
+        metrics = scale_chair_metrics(item.get("metrics", {}))
         halc_result[img_id] = {
             "caption": item.get("caption", ""),
             "chairs": metrics.get("CHAIRs", 0),
@@ -76,7 +76,8 @@ def main():
             "hallucinate_num": len(item.get("hallucination_idxs", [])),
         }
     
-    overall = chair_result.get("overall_metrics", {})
+    overall_raw = chair_result.get("overall_metrics", {})
+    overall = scale_chair_metrics(overall_raw)
     chairs_avg = float(overall.get("CHAIRs", 0.0))
     chairi_avg = float(overall.get("CHAIRi", 0.0))
     recall_avg = float(overall.get("Recall", 0.0))
@@ -88,10 +89,10 @@ def main():
     print("CHAIR Evaluation Results")
     print("=" * 80)
     print(f"Samples:          {n_samples}")
-    print(f"CHAIRs (avg):     {chairs_avg:.4f}")
-    print(f"CHAIRi (avg):     {chairi_avg:.4f}")
-    print(f"Recall (avg):      {recall_avg:.4f}")
-    print(f"Len (avg):         {len_avg:.4f}")
+    print(f"CHAIRs (%):       {chairs_avg:.2f}")
+    print(f"CHAIRi (%):       {chairi_avg:.2f}")
+    print(f"Recall (%):       {recall_avg:.2f}")
+    print(f"Len (words):      {len_avg:.2f}")
     print("=" * 80)
     
     # Detailed results (optional)
@@ -114,6 +115,7 @@ def main():
         "input_file": args.input,
         "num_samples": n_samples,
         "overall_metrics": overall,
+        "overall_metrics_raw": overall_raw,
         "per_image_results": halc_result,
         "full_chair_output": chair_result
     }

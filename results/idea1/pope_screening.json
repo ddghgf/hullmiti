@@ -1,0 +1,175 @@
+{
+  "protocol": "POPE first 50/class (100/split); fixed default configuration",
+  "config": {
+    "enabled": true,
+    "layers": [
+      16,
+      20,
+      24,
+      28
+    ],
+    "ratio_threshold": 2.0,
+    "strength": 0.3,
+    "top_fraction": 0.2,
+    "visual_quantile": 0.9,
+    "eps": 1e-06
+  },
+  "parameters_unchanged": true,
+  "baseline": {
+    "random": {
+      "accuracy": 0.88,
+      "precision": 0.9318181818181818,
+      "recall": 0.82,
+      "f1": 0.8723404255319149,
+      "yes_ratio": 0.44,
+      "tp": 41,
+      "fp": 3,
+      "tn": 47,
+      "fn": 9,
+      "false_positive_rate": 0.06
+    },
+    "popular": {
+      "accuracy": 0.87,
+      "precision": 0.9111111111111111,
+      "recall": 0.82,
+      "f1": 0.8631578947368421,
+      "yes_ratio": 0.45,
+      "tp": 41,
+      "fp": 4,
+      "tn": 46,
+      "fn": 9,
+      "false_positive_rate": 0.08
+    },
+    "adversarial": {
+      "accuracy": 0.81,
+      "precision": 0.803921568627451,
+      "recall": 0.82,
+      "f1": 0.8118811881188118,
+      "yes_ratio": 0.51,
+      "tp": 41,
+      "fp": 10,
+      "tn": 40,
+      "fn": 9,
+      "false_positive_rate": 0.2
+    }
+  },
+  "visual_ffn_gating": {
+    "random": {
+      "metrics": {
+        "accuracy": 0.9,
+        "precision": 0.9,
+        "recall": 0.9,
+        "f1": 0.9,
+        "yes_ratio": 0.5,
+        "tp": 45,
+        "fp": 5,
+        "tn": 45,
+        "fn": 5,
+        "false_positive_rate": 0.1
+      },
+      "transitions": {
+        "prediction_changes": 6,
+        "incorrect_to_correct": 4,
+        "correct_to_incorrect": 2,
+        "prediction_flip_rate": 0.06
+      },
+      "statistics": {
+        "activation_delta_norm": 3.499059077203274,
+        "changed_ratio": 1.0,
+        "mean_ratio": 1.061007633805275,
+        "negative_ratio": 0.49354855380952356,
+        "ratio_candidate_ratio": 0.1425953848287463,
+        "selected_count": 687.3125,
+        "selected_mean_ratio": 3.930443809628487,
+        "selected_projection_mass_ratio": 0.1984123956412077,
+        "selected_ratio": 0.06243754543364048,
+        "text_activation_mean": 0.060573878725990654,
+        "top_ratio": 0.20003633201122284,
+        "visual_support_mean": 0.12458574621006846
+      },
+      "efficiency": {
+        "total_seconds": 15.787378896959126,
+        "mean_seconds": 0.15787378896959126,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    },
+    "popular": {
+      "metrics": {
+        "accuracy": 0.9,
+        "precision": 0.9,
+        "recall": 0.9,
+        "f1": 0.9,
+        "yes_ratio": 0.5,
+        "tp": 45,
+        "fp": 5,
+        "tn": 45,
+        "fn": 5,
+        "false_positive_rate": 0.1
+      },
+      "transitions": {
+        "prediction_changes": 5,
+        "incorrect_to_correct": 4,
+        "correct_to_incorrect": 1,
+        "prediction_flip_rate": 0.05
+      },
+      "statistics": {
+        "activation_delta_norm": 3.466613467335701,
+        "changed_ratio": 1.0,
+        "mean_ratio": 1.0592667768895625,
+        "negative_ratio": 0.4935176671296358,
+        "ratio_candidate_ratio": 0.1424561678804457,
+        "selected_count": 685.935,
+        "selected_mean_ratio": 3.9216239780187605,
+        "selected_projection_mass_ratio": 0.19844121314585209,
+        "selected_ratio": 0.06231240912340581,
+        "text_activation_mean": 0.06020284332334995,
+        "top_ratio": 0.20003633201122284,
+        "visual_support_mean": 0.12457991864532232
+      },
+      "efficiency": {
+        "total_seconds": 13.074737064540386,
+        "mean_seconds": 0.13074737064540387,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    },
+    "adversarial": {
+      "metrics": {
+        "accuracy": 0.8,
+        "precision": 0.75,
+        "recall": 0.9,
+        "f1": 0.8181818181818182,
+        "yes_ratio": 0.6,
+        "tp": 45,
+        "fp": 15,
+        "tn": 35,
+        "fn": 5,
+        "false_positive_rate": 0.3
+      },
+      "transitions": {
+        "prediction_changes": 9,
+        "incorrect_to_correct": 4,
+        "correct_to_incorrect": 5,
+        "prediction_flip_rate": 0.09
+      },
+      "statistics": {
+        "activation_delta_norm": 3.4763327398896218,
+        "changed_ratio": 1.0,
+        "mean_ratio": 1.0582810217142105,
+        "negative_ratio": 0.4932673943787813,
+        "ratio_candidate_ratio": 0.1423001451045275,
+        "selected_count": 685.555,
+        "selected_mean_ratio": 3.9132684129476547,
+        "selected_projection_mass_ratio": 0.19820730440318585,
+        "selected_ratio": 0.06227788870222867,
+        "text_activation_mean": 0.06010471611283719,
+        "top_ratio": 0.20003633201122284,
+        "visual_support_mean": 0.12457994708791376
+      },
+      "efficiency": {
+        "total_seconds": 14.490753987804055,
+        "mean_seconds": 0.14490753987804056,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    }
+  }
+}

@@ -68,12 +68,14 @@ def main():
     sampling = args.sampling if args.sampling else cfg.get("sampling", "random")
     num_samples = args.num_samples if args.num_samples else cfg.get("num_samples", 500)
     data_root = cfg.get("coco_root", str(project_root / "DATA"))
+    use_hulluedit = cfg.get("use_hulluedit", True)
     
     output_dir = args.output_dir if args.output_dir else cfg.get("output_dir", str(project_root / "outputs" / "chair"))
     os.makedirs(output_dir, exist_ok=True)
     
     print("=" * 80)
-    print("Hulluedit CHAIR Caption Generation")
+    mode_name = "HulluEdit" if use_hulluedit else "Original LLaVA baseline"
+    print(f"CHAIR Caption Generation ({mode_name})")
     print("=" * 80)
     print(f"Dataset settings:")
     print(f"  Split:       {split}")
@@ -81,11 +83,13 @@ def main():
     print(f"  Num Samples: {num_samples}")
     print(f"  Seed:        {seed}")
     print("=" * 80)
-    print(f"Hulluedit parameters:")
-    print(f"  Rank (r,q):  ({cfg.get('rank_evidence', 6)}, {cfg.get('rank_prior', 4)})")
-    print(f"  Kappa:       {cfg.get('kappa', 0.6)}")
-    print(f"  Lambda:      {cfg.get('lambda_prior', 0.3)}")
-    print(f"  Anchor:      {cfg.get('anchor_layer', 26)}")
+    print(f"Method:")
+    print(f"  Mode:        {mode_name}")
+    if use_hulluedit:
+        print(f"  Rank (r,q):  ({cfg.get('rank_evidence', 6)}, {cfg.get('rank_prior', 4)})")
+        print(f"  Kappa:       {cfg.get('kappa', 0.6)}")
+        print(f"  Lambda:      {cfg.get('lambda_prior', 0.3)}")
+        print(f"  Anchor:      {cfg.get('anchor_layer', 26)}")
     print("=" * 80)
     print(f"Generation parameters:")
     print(f"  Temperature: {cfg.get('temperature', 0.2)}")
@@ -164,6 +168,7 @@ def main():
         
         eng_cfg = EngineConfig(
             model_name=cfg["model_name"],
+            use_hulluedit=use_hulluedit,
             anchor_layer=cfg.get("anchor_layer", 26),
             estimate_layer=estimate_layer,
             edit_layer=edit_layer,

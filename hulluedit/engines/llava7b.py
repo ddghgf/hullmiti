@@ -16,6 +16,7 @@ except Exception:
     pass
 
 import torch
+import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 from transformers import AutoTokenizer, CLIPImageProcessor
@@ -38,6 +39,7 @@ from hulluedit.steer import HullueditSteerer, HullueditConfig
 class EngineConfig:
     """Engine Configuration"""
     model_name: str
+    use_hulluedit: bool = True
     anchor_layer: int = 26
     estimate_layer: Optional[int] = None  # Subspace estimation layer, defaults to anchor_layer
     edit_layer: Optional[int] = None      # Edit layer, None means top layer (-1)
@@ -61,6 +63,11 @@ class LLaVAHullueditEngine:
         hulluedit_cfg: HullueditConfig, 
         device: str = "cuda"
     ):
+        # A 7B model fits on a >=20 GB GPU.  Pin it to one visible GPU to
+        # avoid device_map="auto" splitting layers across GPUs/CPU, which is
+        # slower for this token-by-token editing workload.
+        if device == "cuda":
+            device = "cuda:0"
         self.device = device
         self.eng_cfg = eng_cfg
         self.hulluedit_cfg = hulluedit_cfg
@@ -80,9 +87,15 @@ class LLaVAHullueditEngine:
         
         self.model.eval()
         
-        # Hulluedit steerer
-        self.steerer = HullueditSteerer(hulluedit_cfg)
-        print("[Hulluedit] Engine initialization complete")
+        # Do not even instantiate the author's steering module for a baseline
+        # run.  The baseline generation path calls the original LLaVA
+        # ``model.generate`` directly.
+        if eng_cfg.use_hulluedit:
+            self.steerer = HullueditSteerer(hulluedit_cfg)
+            print("[Hulluedit] Engine initialization complete")
+        else:
+            self.steerer = None
+            print("[Baseline] Original LLaVA engine initialization complete")
 
     @torch.no_grad()
     def _build_inputs(
@@ -136,12 +149,13 @@ class LLaVAHullueditEngine:
         # Here we return a simplified mask (expanded later with actual sequence length)
         return image_token_mask
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def generate(
         self, 
         prompt: str, 
         image: str | Image.Image,
-        max_new_tokens: Optional[int] = None
+        max_new_tokens: Optional[int] = None,
+        stop_on_yes_no: bool = False,
     ) -> Dict[str, Any]:
         """
         Generate response (with Hulluedit editing)
@@ -150,6 +164,8 @@ class LLaVAHullueditEngine:
             prompt: Input prompt
             image: Image path or PIL.Image
             max_new_tokens: Max tokens to generate
+            stop_on_yes_no: Stop once a standalone yes/no appears near the
+                beginning of the decoded response (used by POPE)
             
         Returns:
             {
@@ -158,6 +174,9 @@ class LLaVAHullueditEngine:
             "tokens": generated token list
             }
         """
+        if not self.eng_cfg.use_hulluedit:
+            return self._generate_hf_beam(prompt, image, max_new_tokens=max_new_tokens)
+
         if self.eng_cfg.num_beams > 1 and self.eng_cfg.temperature <= 1e-6:
             return self._generate_hf_beam(prompt, image, max_new_tokens=max_new_tokens)
 
@@ -234,7 +253,7 @@ class LLaVAHullueditEngine:
                         txtL = hL[0, vision_end_idx:-1, :].clone()  # [n_txt, d]
                     else:
                         hidden_dim = hL.shape[2]
-                        txtL = torch.empty(0, hidden_dim, dtype=hL.dtype, device=self.device)
+                        txtL = torch.empty(0, hidden_dim, dtype=hL.dtype, device=hL.device)
                     cached_txt_states[L] = txtL
                 
                 first_pass = False
@@ -243,7 +262,10 @@ class LLaVAHullueditEngine:
                 # Cumulative text hidden states (for subsequent anti-prior calculation)
                 for L in target_layers:
                     hL = hidden_states[L]
-                    new_txt_hidden = hL[0, -1, :].unsqueeze(0)  # [1, d]
+                    new_txt_hidden = hL[0, -1, :].unsqueeze(0).to(
+                        device=cached_txt_states[L].device,
+                        dtype=cached_txt_states[L].dtype,
+                    )  # [1, d]
                     cached_txt_states[L] = torch.cat([cached_txt_states[L], new_txt_hidden], dim=0)
             
             # Get hidden state for editing (edit_layer already converted to actual index)
@@ -252,8 +274,10 @@ class LLaVAHullueditEngine:
             # Hulluedit editing (supports multi-layer aggregation)
             if len(target_layers) == 1:
                 L = target_layers[0]
-                U = self.steerer.compute_evidence_subspace(cached_vis_states[L], h_to_edit)
-                P = self.steerer.compute_anti_prior_subspace(cached_txt_states[L], U)
+                vis_states = cached_vis_states[L].to(device=h_to_edit.device, dtype=h_to_edit.dtype)
+                txt_states = cached_txt_states[L].to(device=h_to_edit.device, dtype=h_to_edit.dtype)
+                U = self.steerer.compute_evidence_subspace(vis_states, h_to_edit)
+                P = self.steerer.compute_anti_prior_subspace(txt_states, U)
                 edit_result = self.steerer.edit_text_hidden(h_to_edit, U, P)
                 h_edited = edit_result.h_edited
                 certs.append({
@@ -266,8 +290,10 @@ class LLaVAHullueditEngine:
                 per_layer = []
                 vcr_list = []
                 for L in target_layers:
-                    U = self.steerer.compute_evidence_subspace(cached_vis_states[L], h_to_edit)
-                    P = self.steerer.compute_anti_prior_subspace(cached_txt_states[L], U)
+                    vis_states = cached_vis_states[L].to(device=h_to_edit.device, dtype=h_to_edit.dtype)
+                    txt_states = cached_txt_states[L].to(device=h_to_edit.device, dtype=h_to_edit.dtype)
+                    U = self.steerer.compute_evidence_subspace(vis_states, h_to_edit)
+                    P = self.steerer.compute_anti_prior_subspace(txt_states, U)
                     er = self.steerer.edit_text_hidden(h_to_edit, U, P)
                     per_layer.append(er)
                     vcr_list.append(float(er.vcr.detach().cpu()))
@@ -332,6 +358,14 @@ class LLaVAHullueditEngine:
             # EOS check
             if next_token_id.item() == self.tokenizer.eos_token_id:
                 break
+
+            if stop_on_yes_no:
+                partial_text = self.tokenizer.decode(
+                    generated_ids,
+                    skip_special_tokens=True,
+                )
+                if re.search(r"\b(?:yes|no)\b", partial_text[:30], flags=re.IGNORECASE):
+                    break
         
         # Decode
         generated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
@@ -352,8 +386,10 @@ class LLaVAHullueditEngine:
         """Apply HulluEdit to one beam hidden state and map the edited state to logits."""
         if len(target_layers) == 1:
             L = target_layers[0]
-            U = self.steerer.compute_evidence_subspace(cached_vis_states[L], h_to_edit)
-            P = self.steerer.compute_anti_prior_subspace(cached_txt_states[L], U)
+            vis_states = cached_vis_states[L].to(device=h_to_edit.device, dtype=h_to_edit.dtype)
+            txt_states = cached_txt_states[L].to(device=h_to_edit.device, dtype=h_to_edit.dtype)
+            U = self.steerer.compute_evidence_subspace(vis_states, h_to_edit)
+            P = self.steerer.compute_anti_prior_subspace(txt_states, U)
             edit_result = self.steerer.edit_text_hidden(h_to_edit, U, P)
             h_edited = edit_result.h_edited
             cert = {
@@ -365,8 +401,10 @@ class LLaVAHullueditEngine:
             per_layer = []
             vcr_list = []
             for L in target_layers:
-                U = self.steerer.compute_evidence_subspace(cached_vis_states[L], h_to_edit)
-                P = self.steerer.compute_anti_prior_subspace(cached_txt_states[L], U)
+                vis_states = cached_vis_states[L].to(device=h_to_edit.device, dtype=h_to_edit.dtype)
+                txt_states = cached_txt_states[L].to(device=h_to_edit.device, dtype=h_to_edit.dtype)
+                U = self.steerer.compute_evidence_subspace(vis_states, h_to_edit)
+                P = self.steerer.compute_anti_prior_subspace(txt_states, U)
                 er = self.steerer.edit_text_hidden(h_to_edit, U, P)
                 per_layer.append(er)
                 vcr_list.append(float(er.vcr.detach().cpu()))
@@ -385,7 +423,7 @@ class LLaVAHullueditEngine:
             }
         return self.model.lm_head(h_edited.unsqueeze(0)).squeeze(0), cert
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def _generate_hf_beam(
         self,
         prompt: str,
@@ -416,18 +454,50 @@ class LLaVAHullueditEngine:
         }
 
         skip_edit = (
-            self.hulluedit_cfg.use_fixed_strengths
-            and float(self.hulluedit_cfg.fixed_lambda_n) == 0.0
-            and float(self.hulluedit_cfg.fixed_lambda_p) == 0.0
+            not self.eng_cfg.use_hulluedit
+            or (
+                self.hulluedit_cfg.use_fixed_strengths
+                and float(self.hulluedit_cfg.fixed_lambda_n) == 0.0
+                and float(self.hulluedit_cfg.fixed_lambda_p) == 0.0
+            )
         )
+
+        if skip_edit:
+            original_validate_model_kwargs = self.model._validate_model_kwargs
+            self.model._validate_model_kwargs = lambda model_kwargs: None
+            try:
+                stopping_criteria = KeywordsStoppingCriteria(["###"], self.tokenizer, input_ids)
+                output_ids = self.model.generate(
+                    input_ids,
+                    images=images,
+                    attention_mask=torch.ones_like(input_ids, device=self.device),
+                    do_sample=False,
+                    temperature=0.0,
+                    top_p=None,
+                    top_k=None,
+                    num_beams=num_beams,
+                    max_new_tokens=max_steps,
+                    use_cache=True,
+                    stopping_criteria=[stopping_criteria],
+                )
+            finally:
+                self.model._validate_model_kwargs = original_validate_model_kwargs
+
+            token_tensor = output_ids[0, input_ids.shape[1]:]
+            token_ids = token_tensor.detach().cpu().tolist()
+            text = self.tokenizer.decode(token_tensor, skip_special_tokens=True)
+            if "###" in text:
+                text = text.split("###")[0]
+            return {
+                "text": text.strip(),
+                "certs": [],
+                "tokens": token_ids,
+            }
 
         def steered_forward(*args, **kwargs):
             kwargs["output_hidden_states"] = True
             kwargs["return_dict"] = True
             outputs = original_forward(*args, **kwargs)
-            if skip_edit:
-                return outputs
-
             hidden_states = outputs.hidden_states
             num_layers = len(hidden_states) - 1
             estimate_layer = self.eng_cfg.estimate_layer if self.eng_cfg.estimate_layer is not None else self.eng_cfg.anchor_layer
@@ -449,7 +519,7 @@ class LLaVAHullueditEngine:
                     if vision_end_idx < seq_len - 1:
                         cached_txt_states[L] = hL[0, vision_end_idx:-1, :].clone()
                     else:
-                        cached_txt_states[L] = torch.empty(0, hL.shape[2], dtype=hL.dtype, device=self.device)
+                        cached_txt_states[L] = torch.empty(0, hL.shape[2], dtype=hL.dtype, device=hL.device)
                 state.update({
                     "initialized": True,
                     "vis": cached_vis_states,

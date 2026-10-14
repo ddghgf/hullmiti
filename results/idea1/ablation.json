@@ -1,0 +1,287 @@
+{
+  "protocol": "Sensitivity analysis on the same 128 balanced Random smoke samples; default configuration remains fixed independently of labels",
+  "baseline": {
+    "accuracy": 0.890625,
+    "precision": 0.9464285714285714,
+    "recall": 0.828125,
+    "f1": 0.8833333333333333,
+    "yes_ratio": 0.4375,
+    "tp": 53,
+    "fp": 3,
+    "tn": 61,
+    "fn": 11,
+    "false_positive_rate": 0.046875
+  },
+  "experiments": {
+    "lambda_020_p020": {
+      "config": {
+        "enabled": true,
+        "layers": [
+          16,
+          20,
+          24,
+          28
+        ],
+        "ratio_threshold": 2.0,
+        "strength": 0.2,
+        "top_fraction": 0.2,
+        "visual_quantile": 0.9,
+        "eps": 1e-06
+      },
+      "metrics": {
+        "accuracy": 0.8828125,
+        "precision": 0.9152542372881356,
+        "recall": 0.84375,
+        "f1": 0.8780487804878049,
+        "yes_ratio": 0.4609375,
+        "tp": 54,
+        "fp": 5,
+        "tn": 59,
+        "fn": 10,
+        "false_positive_rate": 0.078125
+      },
+      "transitions": {
+        "prediction_changes": 3,
+        "incorrect_to_correct": 1,
+        "correct_to_incorrect": 2,
+        "prediction_flip_rate": 0.0234375
+      },
+      "statistics": {
+        "activation_delta_norm": 2.3761748684337363,
+        "changed_ratio": 1.0,
+        "mean_ratio": 1.0638566656270996,
+        "negative_ratio": 0.49351785134058446,
+        "ratio_candidate_ratio": 0.14325447888404597,
+        "selected_count": 689.458984375,
+        "selected_mean_ratio": 3.944594049360603,
+        "selected_projection_mass_ratio": 0.1990069474268239,
+        "selected_ratio": 0.06263253848010208,
+        "text_activation_mean": 0.06065894611674594,
+        "top_ratio": 0.20003633201122284,
+        "visual_support_mean": 0.12522463803179562
+      },
+      "efficiency": {
+        "total_seconds": 22.54030681308359,
+        "mean_seconds": 0.17609614697721554,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    },
+    "lambda_040_p020": {
+      "config": {
+        "enabled": true,
+        "layers": [
+          16,
+          20,
+          24,
+          28
+        ],
+        "ratio_threshold": 2.0,
+        "strength": 0.4,
+        "top_fraction": 0.2,
+        "visual_quantile": 0.9,
+        "eps": 1e-06
+      },
+      "metrics": {
+        "accuracy": 0.90625,
+        "precision": 0.9193548387096774,
+        "recall": 0.890625,
+        "f1": 0.9047619047619047,
+        "yes_ratio": 0.484375,
+        "tp": 57,
+        "fp": 5,
+        "tn": 59,
+        "fn": 7,
+        "false_positive_rate": 0.078125
+      },
+      "transitions": {
+        "prediction_changes": 6,
+        "incorrect_to_correct": 4,
+        "correct_to_incorrect": 2,
+        "prediction_flip_rate": 0.046875
+      },
+      "statistics": {
+        "activation_delta_norm": 4.757400556001812,
+        "changed_ratio": 1.0,
+        "mean_ratio": 1.0633247543592006,
+        "negative_ratio": 0.4936019527958706,
+        "ratio_candidate_ratio": 0.14327541552484035,
+        "selected_count": 688.837890625,
+        "selected_mean_ratio": 3.9454754572361708,
+        "selected_projection_mass_ratio": 0.19915240394766442,
+        "selected_ratio": 0.06257611637556693,
+        "text_activation_mean": 0.06040811156708514,
+        "top_ratio": 0.20003633201122284,
+        "visual_support_mean": 0.12522463803179562
+      },
+      "efficiency": {
+        "total_seconds": 20.529327487573028,
+        "mean_seconds": 0.16038537099666428,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    },
+    "lambda_060_p020": {
+      "config": {
+        "enabled": true,
+        "layers": [
+          16,
+          20,
+          24,
+          28
+        ],
+        "ratio_threshold": 2.0,
+        "strength": 0.6,
+        "top_fraction": 0.2,
+        "visual_quantile": 0.9,
+        "eps": 1e-06
+      },
+      "metrics": {
+        "accuracy": 0.8984375,
+        "precision": 0.8923076923076924,
+        "recall": 0.90625,
+        "f1": 0.8992248062015504,
+        "yes_ratio": 0.5078125,
+        "tp": 58,
+        "fp": 7,
+        "tn": 57,
+        "fn": 6,
+        "false_positive_rate": 0.109375
+      },
+      "transitions": {
+        "prediction_changes": 9,
+        "incorrect_to_correct": 5,
+        "correct_to_incorrect": 4,
+        "prediction_flip_rate": 0.0703125
+      },
+      "statistics": {
+        "activation_delta_norm": 7.134588952176273,
+        "changed_ratio": 1.0,
+        "mean_ratio": 1.0628805921878666,
+        "negative_ratio": 0.49372490926180035,
+        "ratio_candidate_ratio": 0.1432750608655624,
+        "selected_count": 688.783203125,
+        "selected_mean_ratio": 3.9449635157361627,
+        "selected_projection_mass_ratio": 0.19941201058099978,
+        "selected_ratio": 0.06257114843901945,
+        "text_activation_mean": 0.06018988804862602,
+        "top_ratio": 0.20003633201122284,
+        "visual_support_mean": 0.12522463803179562
+      },
+      "efficiency": {
+        "total_seconds": 19.333675558678806,
+        "mean_seconds": 0.15104434030217817,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    },
+    "lambda_030_p010": {
+      "config": {
+        "enabled": true,
+        "layers": [
+          16,
+          20,
+          24,
+          28
+        ],
+        "ratio_threshold": 2.0,
+        "strength": 0.3,
+        "top_fraction": 0.1,
+        "visual_quantile": 0.9,
+        "eps": 1e-06
+      },
+      "metrics": {
+        "accuracy": 0.90625,
+        "precision": 0.9193548387096774,
+        "recall": 0.890625,
+        "f1": 0.9047619047619047,
+        "yes_ratio": 0.484375,
+        "tp": 57,
+        "fp": 5,
+        "tn": 59,
+        "fn": 7,
+        "false_positive_rate": 0.078125
+      },
+      "transitions": {
+        "prediction_changes": 6,
+        "incorrect_to_correct": 4,
+        "correct_to_incorrect": 2,
+        "prediction_flip_rate": 0.046875
+      },
+      "statistics": {
+        "activation_delta_norm": 3.515215586172417,
+        "changed_ratio": 1.0,
+        "mean_ratio": 1.063644121401012,
+        "negative_ratio": 0.49353807826992124,
+        "ratio_candidate_ratio": 0.14324614001088776,
+        "selected_count": 432.50390625,
+        "selected_mean_ratio": 4.736032567918301,
+        "selected_projection_mass_ratio": 0.16144752727996092,
+        "selected_ratio": 0.03928996231479687,
+        "text_activation_mean": 0.06055155813373858,
+        "top_ratio": 0.10001816600561142,
+        "visual_support_mean": 0.12522463803179562
+      },
+      "efficiency": {
+        "total_seconds": 21.96181479562074,
+        "mean_seconds": 0.17157667809078703,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    },
+    "lambda_030_p030": {
+      "config": {
+        "enabled": true,
+        "layers": [
+          16,
+          20,
+          24,
+          28
+        ],
+        "ratio_threshold": 2.0,
+        "strength": 0.3,
+        "top_fraction": 0.3,
+        "visual_quantile": 0.9,
+        "eps": 1e-06
+      },
+      "metrics": {
+        "accuracy": 0.90625,
+        "precision": 0.9193548387096774,
+        "recall": 0.890625,
+        "f1": 0.9047619047619047,
+        "yes_ratio": 0.484375,
+        "tp": 57,
+        "fp": 5,
+        "tn": 59,
+        "fn": 7,
+        "false_positive_rate": 0.078125
+      },
+      "transitions": {
+        "prediction_changes": 6,
+        "incorrect_to_correct": 4,
+        "correct_to_incorrect": 2,
+        "prediction_flip_rate": 0.046875
+      },
+      "statistics": {
+        "activation_delta_norm": 3.5725323553197086,
+        "changed_ratio": 1.0,
+        "mean_ratio": 1.0635621170513332,
+        "negative_ratio": 0.4935503213782795,
+        "ratio_candidate_ratio": 0.14329404541058466,
+        "selected_count": 748.685546875,
+        "selected_mean_ratio": 3.8159323600120842,
+        "selected_projection_mass_ratio": 0.20542057696729898,
+        "selected_ratio": 0.06801285829715198,
+        "text_activation_mean": 0.06052032919978956,
+        "top_ratio": 0.30005449056625366,
+        "visual_support_mean": 0.12522463803179562
+      },
+      "efficiency": {
+        "total_seconds": 18.16008107829839,
+        "mean_seconds": 0.14187563342420617,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    }
+  },
+  "previously_tested": {
+    "lambda_000_p020": "See smoke.json identity",
+    "lambda_030_p020": "See smoke.json default"
+  },
+  "parameters_unchanged": true
+}

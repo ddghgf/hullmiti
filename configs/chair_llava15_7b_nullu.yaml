@@ -4,7 +4,7 @@
 # max_new_tokens=64.
 
 engine: llava
-model_name: /path/to/llava-v1.5-7b
+model_name: /mnt/data2/zhangwei/shimenghui/HulluEdit/llava-v1.5-7b
 precision: fp16
 
 # CHAIR-tuned HulluEdit parameters.
@@ -35,5 +35,5 @@ split: val
 sampling: random
 num_samples: 500
 seed: 0
-coco_root: DATA
-output_dir: outputs/chair
+coco_root: /mnt/data2/zhangwei/shimenghui/HulluEdit/DATA
+output_dir: /mnt/data2/zhangwei/shimenghui/HulluEdit/outputs/chair

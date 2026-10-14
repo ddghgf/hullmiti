@@ -111,7 +111,10 @@ def main():
     model_name = args.model_name or cfg.get("model_name", "")
     model_name_lower = model_name.lower()
     
-    # Initialize Hulluedit config
+    use_hulluedit = bool(cfg.get("use_hulluedit", True))
+
+    # Initialize Hulluedit config.  In baseline mode this is retained only to
+    # keep the common engine interface; the steerer is not instantiated or run.
     hulluedit_cfg = HullueditConfig(
         rank_evidence=cfg.get("rank_evidence", 8),
         rank_prior=cfg.get("rank_prior", 5),
@@ -130,16 +133,19 @@ def main():
     )
     
     # Initialize engine
-    print(f"[POPE] Initializing Hulluedit engine: {model_name}")
+    mode_name = "HulluEdit" if use_hulluedit else "Original LLaVA baseline"
+    print(f"[POPE] Initializing {mode_name}: {model_name}")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
     if "llava" in model_name_lower:
         eng_cfg = EngineConfig(
             model_name=cfg["model_name"],
+            use_hulluedit=use_hulluedit,
             anchor_layer=cfg.get("anchor_layer", 28),
             max_new_tokens=cfg.get("max_new_tokens", 128),
             top_p=cfg.get("top_p", 0.9),
             temperature=cfg.get("temperature", 0.12),
+            num_beams=cfg.get("num_beams", 1),
             precision=cfg.get("precision", "bf16")
         )
         engine = LLaVAHullueditEngine(eng_cfg, hulluedit_cfg, device=device)
@@ -228,7 +234,7 @@ def main():
         # Build different prompts based on model type
         if is_llava:
             # LLaVA format prompt
-            prompt = f"USER: <image>\n{question}\nASSISTANT:"
+            prompt = f"USER: <image>\n{question} Answer with yes or no only.\nASSISTANT:"
         elif is_mplug:
             # mPLUG-Owl2 format prompt
             prompt = f"USER: <|image|>\n{question}\nASSISTANT:"
@@ -241,7 +247,12 @@ def main():
             if is_llava:
                 # LLaVA accepts PIL Image or path
                 image = Image.open(image_path).convert("RGB")
-                output_dict = engine.generate(prompt, image, max_new_tokens=cfg.get("max_new_tokens", 128))
+                output_dict = engine.generate(
+                    prompt,
+                    image,
+                    max_new_tokens=cfg.get("max_new_tokens", 4),
+                    stop_on_yes_no=True,
+                )
                 pred_text = output_dict.get("text", output_dict.get("output", ""))
             elif is_mplug:
                 # mPLUG-Owl2 accepts path
@@ -291,8 +302,7 @@ def main():
     
     # Compute metrics
     if len(predictions) == 0:
-        print("[ERROR] No predictions generated successfully")
-        return
+        raise RuntimeError("No predictions generated successfully; no result file was written")
     
     metrics = evaluate_pope(predictions, labels)
     
@@ -307,6 +317,8 @@ def main():
     output_data = {
         "config": args.config,
         "model_name": model_name,
+        "method": mode_name,
+        "use_hulluedit": use_hulluedit,
         "split": args.split,
         "num_samples": len(results),
         "metrics": metrics,

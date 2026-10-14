@@ -1,0 +1,19 @@
+# POPE baseline: original LLaVA-1.5-7B without HulluEdit.
+# Dataset, prompt, and decoding parameters match the HulluEdit POPE run.
+
+model_name: /mnt/data2/zhangwei/shimenghui/HulluEdit/llava-v1.5-7b
+precision: bf16
+use_hulluedit: false
+
+# Deterministic original LLaVA decoding.
+max_new_tokens: 4
+top_p: 1.0
+temperature: 0.0
+num_beams: 1
+
+# Dataset config
+pope_root: /mnt/data2/zhangwei/shimenghui/HulluEdit/DATA/POPE
+coco_images: /mnt/data2/zhangwei/shimenghui/HulluEdit/DATA/val2014
+
+# Output config (the runner uses its own separate baseline directory).
+output_dir: /mnt/data2/zhangwei/shimenghui/HulluEdit/outputs/pope_llava_baseline

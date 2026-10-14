@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
 CHAIR evaluation script
-Uses DeCo's chair.py to compute CHAIR metrics (CHAIRs, CHAIRi), and outputs Recall and Len.
+Uses the vendored CHAIR implementation to compute CHAIR metrics (CHAIRs,
+CHAIRi), and outputs Recall and Len.
 
 Dependencies:
-- DeCo/Nullu CHAIR implementation. Pass --chair-code-dir or set CHAIR_CODE_DIR
-  to a directory that contains chair.py, or make chair.py importable via PYTHONPATH.
+- The default evaluator is vendored as hulluedit.eval.chair. Pass
+  --chair-code-dir or set CHAIR_CODE_DIR only to override it.
 - NLTK (tokenization, POS tagging, WordNet lemmatization); set NLTK_DATA environment variable
 """
 import argparse
@@ -20,11 +21,25 @@ from tqdm import tqdm
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
+def scale_chair_metrics(metrics: Dict[str, Any]) -> Dict[str, float]:
+    """Convert CHAIR ratios to percentages and restore the true mean length."""
+    return {
+        "CHAIRs": round(100.0 * float(metrics.get("CHAIRs", 0.0)), 2),
+        "CHAIRi": round(100.0 * float(metrics.get("CHAIRi", 0.0)), 2),
+        "Recall": round(100.0 * float(metrics.get("Recall", 0.0)), 2),
+        "Len": round(100.0 * float(metrics.get("Len", 0.0)), 2),
+    }
+
+
 def load_chair_class(chair_code_dir: str = ""):
-    if chair_code_dir:
-        chair_root = str(Path(chair_code_dir).expanduser().resolve())
-        if chair_root not in sys.path:
-            sys.path.insert(0, chair_root)
+    if not chair_code_dir:
+        from hulluedit.eval.chair import CHAIR  # type: ignore
+        return CHAIR
+
+    # An explicit path overrides the vendored evaluator above.
+    chair_root = str(Path(chair_code_dir).expanduser().resolve())
+    if chair_root not in sys.path:
+        sys.path.insert(0, chair_root)
 
     try:
         from chair import CHAIR  # type: ignore
@@ -83,7 +98,7 @@ def compute_chair_metrics(
     chair_code_dir: str = "",
 ) -> Dict[str, Any]:
     """
-    Compute metrics using DeCo's CHAIR implementation.
+    Compute metrics using the vendored CHAIR implementation.
 
     Args:
         jsonl_file: Prediction JSONL file (each line contains image_id, caption)
@@ -91,7 +106,7 @@ def compute_chair_metrics(
         cache_file: Optional, CHAIR evaluator cache (pickle) path
 
     Returns:
-        dict: Output consistent with DeCo/chair.py (sentences and overall_metrics)
+        dict: CHAIR output containing sentences and overall_metrics
     """
     import pickle
     chair_cls = load_chair_class(chair_code_dir)
@@ -142,7 +157,7 @@ def parse_args():
     parser.add_argument("--cache", type=str, default=str(PROJECT_ROOT / "outputs" / "chair" / "chair.pkl"),
                        help="CHAIR evaluator cache (pickle) path; leave empty to disable caching")
     parser.add_argument("--chair-code-dir", type=str, default=os.environ.get("CHAIR_CODE_DIR", ""),
-                       help="Directory containing DeCo/Nullu chair.py; defaults to CHAIR_CODE_DIR or PYTHONPATH")
+                       help="Optional directory containing an external chair.py; defaults to the vendored evaluator")
     parser.add_argument("--verbose", action="store_true",
                        help="Print detailed results")
     
@@ -174,7 +189,7 @@ def main():
     halc_result: Dict[int, Dict[str, Any]] = {}
     for item in halc_caption_result:
         img_id = item["image_id"]
-        metrics = item.get("metrics", {})
+        metrics = scale_chair_metrics(item.get("metrics", {}))
         halc_result[img_id] = {
             "caption": item.get("caption", ""),
             "chairs": metrics.get("CHAIRs", 0),
@@ -185,7 +200,8 @@ def main():
             "hallucinate_num": len(item.get("hallucination_idxs", [])),
         }
     
-    overall = chair_result.get("overall_metrics", {})
+    overall_raw = chair_result.get("overall_metrics", {})
+    overall = scale_chair_metrics(overall_raw)
     chairs_avg = float(overall.get("CHAIRs", 0.0))
     chairi_avg = float(overall.get("CHAIRi", 0.0))
     recall_avg = float(overall.get("Recall", 0.0))
@@ -196,10 +212,10 @@ def main():
     print("CHAIR Evaluation Results")
     print("=" * 80)
     print(f"Samples:          {n_samples}")
-    print(f"CHAIRs (avg):     {chairs_avg:.4f}")
-    print(f"CHAIRi (avg):     {chairi_avg:.4f}")
-    print(f"Recall (avg):     {recall_avg:.4f}")
-    print(f"Len (avg):        {len_avg:.4f}")
+    print(f"CHAIRs (%):       {chairs_avg:.2f}")
+    print(f"CHAIRi (%):       {chairi_avg:.2f}")
+    print(f"Recall (%):       {recall_avg:.2f}")
+    print(f"Len (words):      {len_avg:.2f}")
     print("=" * 80)
     
     if args.verbose:
@@ -220,6 +236,7 @@ def main():
         "input_file": args.input,
         "num_samples": n_samples,
         "overall_metrics": overall,
+        "overall_metrics_raw": overall_raw,
         "per_image_results": halc_result,
         "full_chair_output": chair_result
     }

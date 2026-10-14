@@ -354,7 +354,6 @@ class LlamaAttention(nn.Module):
 
         attn_output = attn_output.transpose(1, 2).contiguous()
         attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
-
         if self.pretraining_tp > 1:
             attn_output = attn_output.split(self.hidden_size // self.pretraining_tp, dim=2)
             o_proj_slices = self.o_proj.weight.split(self.hidden_size // self.pretraining_tp, dim=1)

@@ -1,0 +1,149 @@
+{
+  "protocol": "128 balanced POPE Random samples; greedy; max_new_tokens=4",
+  "baseline": {
+    "metrics": {
+      "accuracy": 0.890625,
+      "precision": 0.9464285714285714,
+      "recall": 0.828125,
+      "f1": 0.8833333333333333,
+      "yes_ratio": 0.4375,
+      "tp": 53,
+      "fp": 3,
+      "tn": 61,
+      "fn": 11,
+      "false_positive_rate": 0.046875
+    },
+    "efficiency": {
+      "total_seconds": 20.3739360794425,
+      "mean_seconds": 0.15917137562064454,
+      "peak_gpu_memory_bytes": 14646859776
+    }
+  },
+  "experiments": {
+    "identity": {
+      "config": {
+        "enabled": true,
+        "layers": [
+          16,
+          20,
+          24,
+          28
+        ],
+        "ratio_threshold": 2.0,
+        "strength": 0.0,
+        "top_fraction": 0.2,
+        "visual_quantile": 0.9,
+        "eps": 1e-06
+      },
+      "metrics": {
+        "accuracy": 0.890625,
+        "precision": 0.9464285714285714,
+        "recall": 0.828125,
+        "f1": 0.8833333333333333,
+        "yes_ratio": 0.4375,
+        "tp": 53,
+        "fp": 3,
+        "tn": 61,
+        "fn": 11,
+        "false_positive_rate": 0.046875
+      },
+      "transitions": {
+        "prediction_changes": 0,
+        "incorrect_to_correct": 0,
+        "correct_to_incorrect": 0,
+        "prediction_flip_rate": 0.0
+      },
+      "logit_delta": {
+        "changed_logits": 0,
+        "mean_l2": 0.0,
+        "max_l2": 0.0,
+        "mean_margin_delta": 0.0,
+        "positive_margin_shifts": 0,
+        "negative_margin_shifts": 0,
+        "top1_changes": 0
+      },
+      "statistics": {
+        "activation_delta_norm": 0.0,
+        "changed_ratio": 0.0,
+        "mean_ratio": 1.0644790288060904,
+        "negative_ratio": 0.4934337508166209,
+        "ratio_candidate_ratio": 0.14329990085389,
+        "selected_count": 690.2265625,
+        "selected_mean_ratio": 3.9436224405653775,
+        "selected_projection_mass_ratio": 0.19892387464642525,
+        "selected_ratio": 0.06270226773631293,
+        "text_activation_mean": 0.06094079111062456,
+        "top_ratio": 0.20003633201122284,
+        "visual_support_mean": 0.12522463803179562
+      },
+      "efficiency": {
+        "total_seconds": 19.28110312949866,
+        "mean_seconds": 0.15063361819920829,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    },
+    "default": {
+      "config": {
+        "enabled": true,
+        "layers": [
+          16,
+          20,
+          24,
+          28
+        ],
+        "ratio_threshold": 2.0,
+        "strength": 0.3,
+        "top_fraction": 0.2,
+        "visual_quantile": 0.9,
+        "eps": 1e-06
+      },
+      "metrics": {
+        "accuracy": 0.90625,
+        "precision": 0.9193548387096774,
+        "recall": 0.890625,
+        "f1": 0.9047619047619047,
+        "yes_ratio": 0.484375,
+        "tp": 57,
+        "fp": 5,
+        "tn": 59,
+        "fn": 7,
+        "false_positive_rate": 0.078125
+      },
+      "transitions": {
+        "prediction_changes": 6,
+        "incorrect_to_correct": 4,
+        "correct_to_incorrect": 2,
+        "prediction_flip_rate": 0.046875
+      },
+      "logit_delta": {
+        "changed_logits": 128,
+        "mean_l2": 14.59043399989605,
+        "max_l2": 26.070852279663086,
+        "mean_margin_delta": 0.3458251953125,
+        "positive_margin_shifts": 124,
+        "negative_margin_shifts": 3,
+        "top1_changes": 6
+      },
+      "statistics": {
+        "activation_delta_norm": 3.5666901448275894,
+        "changed_ratio": 1.0,
+        "mean_ratio": 1.063578334171325,
+        "negative_ratio": 0.49352175486274064,
+        "ratio_candidate_ratio": 0.14327541572856717,
+        "selected_count": 689.15625,
+        "selected_mean_ratio": 3.9449465004727244,
+        "selected_projection_mass_ratio": 0.19909188270685263,
+        "selected_ratio": 0.0626050372447935,
+        "text_activation_mean": 0.06052870487474138,
+        "top_ratio": 0.20003633201122284,
+        "visual_support_mean": 0.12522463803179562
+      },
+      "efficiency": {
+        "total_seconds": 19.453380163758993,
+        "mean_seconds": 0.15197953252936713,
+        "peak_gpu_memory_bytes": 14730923520
+      }
+    }
+  },
+  "parameters_unchanged": true
+}

@@ -3,21 +3,24 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-CONDA_ENV="${CONDA_ENV:-hulluedit}"
+CONDA_ENV="${CONDA_ENV:-/mnt/data2/zhangwei/conda_env/pti}"
 if command -v conda >/dev/null 2>&1; then
   # shellcheck disable=SC1091
   source "$(conda info --base)/etc/profile.d/conda.sh"
   conda activate "${CONDA_ENV}"
 fi
 
-MODEL_PATH="${MODEL_PATH:-/path/to/llava-v1.5-7b}"
+MODEL_PATH="${MODEL_PATH:-${PROJECT_ROOT}/llava-v1.5-7b}"
 CONFIG_TEMPLATE="${CONFIG_TEMPLATE:-${PROJECT_ROOT}/configs/chair_llava15_7b_nullu.yaml}"
 RUN_NAME="${RUN_NAME:-llava15_7b_hulluedit_nullu}"
 OUTPUT_DIR="${OUTPUT_DIR:-${PROJECT_ROOT}/outputs/chair}"
+CHAIR_CODE_DIR="${CHAIR_CODE_DIR:-}"
+CHAIR_GPU="${CHAIR_GPU:-7}"
 mkdir -p "${OUTPUT_DIR}"
 
 export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
-export NLTK_DATA="${NLTK_DATA:-${PROJECT_ROOT}/DATA/nltk_data}"
+export NLTK_DATA="${NLTK_DATA:-/home/wq/nltk_data}"
+export CUDA_VISIBLE_DEVICES="${CHAIR_GPU}"
 
 TMP_CONFIG="${OUTPUT_DIR}/.${RUN_NAME}.yaml"
 python - "${CONFIG_TEMPLATE}" "${TMP_CONFIG}" "${MODEL_PATH}" "${PROJECT_ROOT}/DATA" "${OUTPUT_DIR}" <<'PY'
@@ -36,13 +39,15 @@ PY
 
 CAP_JSONL="${OUTPUT_DIR}/chair_captions_${RUN_NAME}.jsonl"
 CHAIR_JSON="${OUTPUT_DIR}/chair_captions_${RUN_NAME}_chair_result.json"
-CHAIR_CACHE="${CHAIR_CACHE:-${OUTPUT_DIR}/chair_${RUN_NAME}.pkl}"
+CHAIR_CACHE="${CHAIR_CACHE:-${OUTPUT_DIR}/chair_coco2014.pkl}"
 CHAIR_ARGS=()
 if [ -n "${CHAIR_CODE_DIR:-}" ]; then
   CHAIR_ARGS+=(--chair-code-dir "${CHAIR_CODE_DIR}")
 fi
 
-rm -f "${CAP_JSONL}" "${CHAIR_JSON}" "${CHAIR_CACHE}"
+if [ "${FRESH_RUN:-0}" = "1" ]; then
+  rm -f "${CAP_JSONL}" "${CHAIR_JSON}"
+fi
 
 python -m hulluedit.eval.generate_chair_captions \
   --config "${TMP_CONFIG}" \

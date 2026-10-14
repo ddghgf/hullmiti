@@ -1,0 +1,61 @@
+{
+  "protocol": "Fixed 100-image CHAIR; matched prompt; beam=3; max_new_tokens=64",
+  "config": {
+    "enabled": true,
+    "layers": [
+      16,
+      20,
+      24,
+      28
+    ],
+    "ratio_threshold": 2.0,
+    "strength": 0.3,
+    "top_fraction": 0.2,
+    "visual_quantile": 0.9,
+    "eps": 1e-06
+  },
+  "parameters_unchanged": true,
+  "baseline": {
+    "metrics": {
+      "CHAIRs": 21.0,
+      "CHAIRi": 6.95,
+      "Recall": 59.67,
+      "Len": 53.17,
+      "ObjectCount": 4.17
+    },
+    "efficiency": {
+      "total_seconds": 386.92878948524594,
+      "mean_seconds": 3.8692878948524596,
+      "peak_gpu_memory_bytes": 17450109952
+    }
+  },
+  "visual_ffn_gating": {
+    "metrics": {
+      "CHAIRs": 24.0,
+      "CHAIRi": 9.69,
+      "Recall": 61.67,
+      "Len": 53.42,
+      "ObjectCount": 4.13
+    },
+    "efficiency": {
+      "total_seconds": 472.33757231384516,
+      "mean_seconds": 4.723375723138451,
+      "peak_gpu_memory_bytes": 17528808448
+    },
+    "caption_changes": 90,
+    "statistics": {
+      "activation_delta_norm": 2.730880673977081,
+      "changed_ratio": 1.0,
+      "mean_ratio": 1.069608145467937,
+      "negative_ratio": 0.498037942602532,
+      "ratio_candidate_ratio": 0.14552448075235588,
+      "selected_count": 694.8130930042266,
+      "selected_mean_ratio": 3.720104136252776,
+      "selected_projection_mass_ratio": 0.1952459509705659,
+      "selected_ratio": 0.06311891991193988,
+      "text_activation_mean": 0.07533948428936128,
+      "top_ratio": 0.20003633201122284,
+      "visual_support_mean": 0.12648040061816573
+    }
+  }
+}

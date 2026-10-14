@@ -1,0 +1,21 @@
+# CHAIR baseline: original LLaVA-1.5-7B without HulluEdit.
+# The data, prompt, and decoding protocol match the HulluEdit CHAIR run.
+
+engine: llava
+model_name: /mnt/data2/zhangwei/shimenghui/HulluEdit/llava-v1.5-7b
+precision: fp16
+use_hulluedit: false
+
+# Matched CHAIR decoding protocol.
+max_new_tokens: 64
+top_p: 1.0
+temperature: 0.0
+num_beams: 3
+
+# Matched CHAIR data protocol.
+split: val
+sampling: random
+num_samples: 500
+seed: 0
+coco_root: /mnt/data2/zhangwei/shimenghui/HulluEdit/DATA
+output_dir: /mnt/data2/zhangwei/shimenghui/HulluEdit/outputs/chair

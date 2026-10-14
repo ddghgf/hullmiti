@@ -92,8 +92,11 @@ class LlavaMetaForCausalLM(ABC):
         return self.get_model().get_vision_tower()
 
     def encode_images(self, images):
-        image_features = self.get_model().get_vision_tower()(images)
-        image_features = self.get_model().mm_projector(image_features)
+        raw_image_features = self.get_model().get_vision_tower()(images)
+        image_features = self.get_model().mm_projector(raw_image_features)
+        pem_controller = getattr(self, "_pem_controller", None)
+        if pem_controller is not None:
+            image_features = pem_controller.apply(raw_image_features, image_features)
         return image_features
 
     def prepare_inputs_labels_for_multimodal(
@@ -161,6 +164,10 @@ class LlavaMetaForCausalLM(ABC):
             if num_images == 0:
                 cur_image_features = image_features[cur_image_idx]
                 cur_input_embeds_1 = self.get_model().embed_tokens(cur_input_ids)
+                cur_image_features = cur_image_features.to(
+                    device=cur_input_embeds_1.device,
+                    dtype=cur_input_embeds_1.dtype,
+                )
                 cur_input_embeds = torch.cat([cur_input_embeds_1, cur_image_features[0:0]], dim=0)
                 new_input_embeds.append(cur_input_embeds)
                 new_labels.append(labels[batch_idx])
@@ -195,6 +202,13 @@ class LlavaMetaForCausalLM(ABC):
                 if i < num_images:
                     cur_image_features = image_features[cur_image_idx]
                     cur_image_idx += 1
+                    # With device_map="auto", the vision tower and token
+                    # embeddings may live on different GPUs.  Fusion must
+                    # happen on the token-embedding device.
+                    cur_image_features = cur_image_features.to(
+                        device=cur_input_embeds_no_im[i].device,
+                        dtype=cur_input_embeds_no_im[i].dtype,
+                    )
                     cur_new_input_embeds.append(cur_image_features) # 加入image_features
                     # 插入视觉特有的标志符号
                     intervene_list.append(torch.ones_like(cur_image_features))
@@ -249,7 +263,6 @@ class LlavaMetaForCausalLM(ABC):
                     position_ids[i, :cur_len] = torch.arange(0, cur_len, dtype=position_ids.dtype, device=position_ids.device)
 
         new_input_embeds = torch.stack(new_input_embeds_padded, dim=0)
-
         if _labels is None:
             new_labels = None
         else:
